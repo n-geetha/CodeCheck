@@ -1,38 +1,35 @@
-## CodeCheck
+from flask import Flask, request, jsonify
+import re
 
-CodeCheck is a Django based online judge made using the Hackerrank API.
+app = Flask(__name__)
 
-https://code-check-csi.herokuapp.com/
+def is_sanitized(input_string):
+    # Check for SQL injection characters
+    sql_injection_chars = re.compile(r'(\b(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|AND|OR)\b)', re.IGNORECASE)
+    return not sql_injection_chars.search(input_string)
+
+@app.route('/v1/sanitized/input/', methods=['POST'])
+def check_sanitization():
+    try:
+        # Parse JSON payload from the request
+        payload = request.get_json()
+
+        # Check if 'input' key exists in the payload
+        if 'input' not in payload:
+            return jsonify({'error': 'Invalid payload. Missing "input" key'}), 400
+
+        input_string = payload['input']
+
+        # Check for SQL injection characters
+        if is_sanitized(input_string):
+            return jsonify({'result': 'sanitized'})
+        else:
+            return jsonify({'result': 'unsanitized'})
+
+    except Exception as e:
+        return jsonify({'error': 'An error occurred while processing the request', 'details': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 
-### Features
-
-- Supports 54 languages
-- Contests can be hosted
-- Tracks can be added
-- Direct compiler is provided to run any code
-- Keeps tracks of solved questions of user
-- better user stats with leaderboard and charts
-- User friendly and fully responsive
-
-
-### Packages/Platforms used
-
-- [Django](https://www.djangoproject.com/)
-- [django-allauth](https://github.com/pennersr/django-allauth)
-- [django-crispy-forms](http://django-crispy-forms.readthedocs.io/en/latest/)
-- [Heroku](https://www.heroku.com/)
-- [Ace Editor](https://ace.c9.io/)
-
- 
-
-
-
-<img src="images/compiler.PNG" width="850">
-<img src="images/contests.PNG" width="850">
-<img src="images/practice.PNG" width="850">
-<img src="images/questions.PNG" width="850">
-<img src="images/user main.PNG" width="850">
-
-<div><img src="images/login.png" width="300">
-<img src="images/reset.png" width="275"></div>
